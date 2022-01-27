@@ -1,10 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE HTML>
+<html xmlns:th="https://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Подсчёт количества уникальных слов на сайте</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 </head>
 <body>
-    <h1>Hello, World!</h1>
-</body>
+<h1>Form</h1>
+<form th:action="@{/index}" th:object="${inputData}" method="post">
+    <span>URL</span>
+    <input th:field="*{url}">
+    </p>
+    <span>Список разделителей</span>
+    <input th:field="*{delimiters}">
+    </p>
+    <button type="submit">OK</button>
+</form></body>
 </html>
