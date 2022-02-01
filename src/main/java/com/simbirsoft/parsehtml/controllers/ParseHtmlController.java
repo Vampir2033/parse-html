@@ -1,29 +1,32 @@
 package com.simbirsoft.parsehtml.controllers;
 
-import com.simbirsoft.parsehtml.entities.InputData;
+import com.simbirsoft.parsehtml.entities.DateUrl;
+import com.simbirsoft.parsehtml.repositories.DataUrlRepository;
 import com.simbirsoft.parsehtml.services.SplitText;
 import com.simbirsoft.parsehtml.services.WebPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
 
-import java.io.IOException;
-import java.util.List;
+import java.sql.Date;
+import java.sql.Time;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/")
 public class ParseHtmlController {
+
+    @Autowired
+    DataUrlRepository dataUrlRepository;
+
     Logger logger = LoggerFactory.getLogger(ParseHtmlController.class);
     @GetMapping("/index")
     public String providingInterface(Model model){
@@ -32,8 +35,7 @@ public class ParseHtmlController {
     }
 
     @PostMapping("/index")
-    public RedirectView parseHtml(Model model,
-                                  @ModelAttribute(value = "inputData")InputData inputData,
+    public RedirectView parseHtml(@ModelAttribute(value = "inputData")InputData inputData,
                                   RedirectAttributes attributes){
         String pageText = null;
         try {
@@ -55,6 +57,13 @@ public class ParseHtmlController {
             return new RedirectView("/user-error");
         }
         attributes.addFlashAttribute("wordsMap", wordsOnPage);
+        DateUrl dateUrlEntity = new DateUrl(
+                new Date(System.currentTimeMillis()),
+                new Time(System.currentTimeMillis()),
+                inputData.getUrl(),
+                inputData.getDelimiters());
+        dataUrlRepository.save(dateUrlEntity);
+        System.out.println(dateUrlEntity);
         return new RedirectView("/result-page");
     }
 
@@ -70,5 +79,42 @@ public class ParseHtmlController {
                              @ModelAttribute("wordsMap")Map<String, Integer> wordsMap){
         model.addAttribute("wordsOnPage", wordsMap);
         return "result_page";
+    }
+}
+
+class InputData {
+    private String url;
+    private String delimiters;
+
+    public InputData() {
+    }
+
+    public InputData(String url, String delimiters) {
+        this.url = url;
+        this.delimiters = delimiters;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getDelimiters() {
+        return delimiters;
+    }
+
+    public void setDelimiters(String delimiters) {
+        this.delimiters = delimiters;
+    }
+
+    @Override
+    public String toString() {
+        return "InputData{" +
+                "url='" + url + '\'' +
+                ", delimiters='" + delimiters + '\'' +
+                '}';
     }
 }
