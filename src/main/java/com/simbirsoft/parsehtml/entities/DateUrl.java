@@ -3,6 +3,7 @@ package com.simbirsoft.parsehtml.entities;
 import javax.persistence.*;
 import java.sql.Time;
 import java.sql.Date;
+import java.util.List;
 
 @Entity
 public class DateUrl {
@@ -18,16 +19,21 @@ public class DateUrl {
 
     private String delimiters;
 
+    @OneToMany
+    List<RequestResultEntity> results;
+
+    public DateUrl(Date date, Time time, String url, String delimiters) {
+        this.date = date;
+        this.time = time;
+        this.url = url;
+        this.delimiters = delimiters;
+    }
+
+    public DateUrl() {
+    }
+
     public Long getId() {
         return id;
-    }
-
-    public Time getTime() {
-        return time;
-    }
-
-    public void setTime(Time time) {
-        this.time = time;
     }
 
     public void setId(Long id) {
@@ -40,6 +46,14 @@ public class DateUrl {
 
     public void setDate(Date date) {
         this.date = date;
+    }
+
+    public Time getTime() {
+        return time;
+    }
+
+    public void setTime(Time time) {
+        this.time = time;
     }
 
     public String getUrl() {
@@ -58,14 +72,12 @@ public class DateUrl {
         this.delimiters = delimiters;
     }
 
-    public DateUrl(Date date, Time time, String url, String delimiters) {
-        this.date = date;
-        this.time = time;
-        this.url = url;
-        this.delimiters = delimiters;
+    public List<RequestResultEntity> getResults() {
+        return results;
     }
 
-    public DateUrl() {
+    public void setResults(List<RequestResultEntity> results) {
+        this.results = results;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.simbirsoft.parsehtml.controllers;
 
 import com.simbirsoft.parsehtml.entities.DateUrl;
+import com.simbirsoft.parsehtml.entities.RequestResultEntity;
 import com.simbirsoft.parsehtml.repositories.DataUrlRepository;
 import com.simbirsoft.parsehtml.services.SplitText;
 import com.simbirsoft.parsehtml.services.WebPage;
@@ -19,6 +20,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import java.sql.Date;
 import java.sql.Time;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/")
@@ -62,6 +64,10 @@ public class ParseHtmlController {
                 new Time(System.currentTimeMillis()),
                 inputData.getUrl(),
                 inputData.getDelimiters());
+        dataUrlRepository.save(dateUrlEntity);
+        dateUrlEntity.setResults(wordsOnPage.entrySet().stream()
+                .map(s -> new RequestResultEntity(s.getKey(), s.getValue()))
+                .collect(Collectors.toList()));
         dataUrlRepository.save(dateUrlEntity);
         System.out.println(dateUrlEntity);
         return new RedirectView("/result-page");
