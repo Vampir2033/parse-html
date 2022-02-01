@@ -19,12 +19,15 @@ public class SplitText {
         String strDelimiters = getDelimitersFromJson(delimiters.trim());
         Map<String, Integer> result = new HashMap<>();
         String[] words = null;
+        String regexForPage = null;
         try {
-            words = pageText.split("["
+            regexForPage = "["
                     + QueryParser.escape(strDelimiters)     // экранируем спецсимволы
-                    + "]+");
+                    + "]+";
+            words = pageText.split(regexForPage);
         } catch (PatternSyntaxException e){
-            throw new IllegalArgumentException("");
+            throw new IllegalArgumentException(
+                    "Не удалось разделить текст полученным регулярным выражением [" + regexForPage);
         }
         Arrays.stream(words)
                 .filter(s -> !s.equals(""))

@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<html xmlns:th="https://www.thymeleaf.org">
+<head>
+  <title>Статистика слов на странице</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+  <tr th:each="word : ${wordsOnPage}">
+    <span th:text="${word.getKey()} + ' - ' + ${word.getValue()}"/>
+    <br>
+  </tr>
+</body>
+</html>
