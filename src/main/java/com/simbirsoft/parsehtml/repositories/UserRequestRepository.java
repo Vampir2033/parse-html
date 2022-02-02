@@ -1,10 +1,10 @@
 package com.simbirsoft.parsehtml.repositories;
 
-import com.simbirsoft.parsehtml.entities.DateUrl;
+import com.simbirsoft.parsehtml.entities.UserRequest;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface DataUrlRepository extends CrudRepository<DateUrl, Long> {
+public interface UserRequestRepository extends CrudRepository<UserRequest, Long> {
 
 }

@@ -3,23 +3,26 @@ package com.simbirsoft.parsehtml.entities;
 import javax.persistence.*;
 
 @Entity
-public class RequestResultEntity {
+@Table(name = "results")
+public class RequestResult {
     @Id
-    @GeneratedValue(strategy= GenerationType.SEQUENCE, generator = "request_result_seq")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-
-    @ManyToOne
-    DateUrl dateUrl;
 
     String word;
     Integer amount;
 
-    public RequestResultEntity(String word, Integer amount) {
+    @ManyToOne
+    @JoinColumn(name = "request_id")
+    private UserRequest request;
+
+    public RequestResult(String word, Integer amount, UserRequest request) {
         this.word = word;
         this.amount = amount;
+        this.request = request;
     }
 
-    public RequestResultEntity() {
+    public RequestResult() {
     }
 
     public Long getId() {
@@ -28,14 +31,6 @@ public class RequestResultEntity {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public DateUrl getDateUrl() {
-        return dateUrl;
-    }
-
-    public void setDateUrl(DateUrl dateUrl) {
-        this.dateUrl = dateUrl;
     }
 
     public String getWord() {
@@ -52,5 +47,13 @@ public class RequestResultEntity {
 
     public void setAmount(Integer amount) {
         this.amount = amount;
+    }
+
+    public UserRequest getRequest() {
+        return request;
+    }
+
+    public void setRequest(UserRequest request) {
+        this.request = request;
     }
 }

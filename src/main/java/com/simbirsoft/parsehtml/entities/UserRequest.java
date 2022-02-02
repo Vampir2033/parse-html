@@ -1,14 +1,18 @@
 package com.simbirsoft.parsehtml.entities;
 
+import org.hibernate.annotations.Cascade;
+
 import javax.persistence.*;
 import java.sql.Time;
 import java.sql.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 @Entity
-public class DateUrl {
+@Table(name = "requests")
+public class UserRequest {
     @Id
-    @GeneratedValue(strategy=GenerationType.SEQUENCE, generator = "date_url_seq")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private Date date;
@@ -19,17 +23,17 @@ public class DateUrl {
 
     private String delimiters;
 
-    @OneToMany
-    List<RequestResultEntity> results;
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    List<RequestResult> results = new LinkedList<>();
 
-    public DateUrl(Date date, Time time, String url, String delimiters) {
+    public UserRequest(Date date, Time time, String url, String delimiters) {
         this.date = date;
         this.time = time;
         this.url = url;
         this.delimiters = delimiters;
     }
 
-    public DateUrl() {
+    public UserRequest() {
     }
 
     public Long getId() {
@@ -72,22 +76,13 @@ public class DateUrl {
         this.delimiters = delimiters;
     }
 
-    public List<RequestResultEntity> getResults() {
+    public List<RequestResult> getResults() {
         return results;
     }
 
-    public void setResults(List<RequestResultEntity> results) {
+    public void setResults(List<RequestResult> results) {
+        results.forEach(r -> r.setRequest(this));
         this.results = results;
     }
 
-    @Override
-    public String toString() {
-        return "DateUrl{" +
-                "id=" + id +
-                ", date=" + date +
-                ", time=" + time +
-                ", url='" + url + '\'' +
-                ", delimiters='" + delimiters + '\'' +
-                '}';
-    }
 }

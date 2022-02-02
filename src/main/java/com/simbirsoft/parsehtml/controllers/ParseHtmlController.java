@@ -1,8 +1,9 @@
 package com.simbirsoft.parsehtml.controllers;
 
-import com.simbirsoft.parsehtml.entities.DateUrl;
-import com.simbirsoft.parsehtml.entities.RequestResultEntity;
-import com.simbirsoft.parsehtml.repositories.DataUrlRepository;
+import com.simbirsoft.parsehtml.entities.RequestResult;
+import com.simbirsoft.parsehtml.entities.UserRequest;
+import com.simbirsoft.parsehtml.repositories.RequestResultRepository;
+import com.simbirsoft.parsehtml.repositories.UserRequestRepository;
 import com.simbirsoft.parsehtml.services.SplitText;
 import com.simbirsoft.parsehtml.services.WebPage;
 import org.slf4j.Logger;
@@ -19,7 +20,9 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import java.sql.Date;
 import java.sql.Time;
+import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Controller
@@ -27,12 +30,16 @@ import java.util.stream.Collectors;
 public class ParseHtmlController {
 
     @Autowired
-    DataUrlRepository dataUrlRepository;
+    UserRequestRepository userRequestRepository;
+
+    @Autowired
+    RequestResultRepository requestResultRepository;
 
     Logger logger = LoggerFactory.getLogger(ParseHtmlController.class);
     @GetMapping("/index")
     public String providingInterface(Model model){
-        model.addAttribute("inputData", new InputData());
+        model.addAttribute("inputData", new InputData("https://www.simbirsoft.com/",
+                "{' ', ',', '.', '!', '?','\"', ';', ':', '[', ']', '(', ')', '\\n', '\\r', '\\t'}\n"));
         return "index";
     }
 
@@ -59,17 +66,19 @@ public class ParseHtmlController {
             return new RedirectView("/user-error");
         }
         attributes.addFlashAttribute("wordsMap", wordsOnPage);
-        DateUrl dateUrlEntity = new DateUrl(
+
+        UserRequest userRequest = new UserRequest(
                 new Date(System.currentTimeMillis()),
                 new Time(System.currentTimeMillis()),
                 inputData.getUrl(),
                 inputData.getDelimiters());
-        dataUrlRepository.save(dateUrlEntity);
-        dateUrlEntity.setResults(wordsOnPage.entrySet().stream()
-                .map(s -> new RequestResultEntity(s.getKey(), s.getValue()))
+        userRequestRepository.save(userRequest);
+
+        userRequest.setResults(wordsOnPage.entrySet().stream()
+                .map(s -> new RequestResult(s.getKey(), s.getValue(), userRequest))
                 .collect(Collectors.toList()));
-        dataUrlRepository.save(dateUrlEntity);
-        System.out.println(dateUrlEntity);
+        userRequestRepository.save(userRequest);
+
         return new RedirectView("/result-page");
     }
 
@@ -85,6 +94,14 @@ public class ParseHtmlController {
                              @ModelAttribute("wordsMap")Map<String, Integer> wordsMap){
         model.addAttribute("wordsOnPage", wordsMap);
         return "result_page";
+    }
+
+    @GetMapping("/requests")
+    public String requestsHistory(Model model){
+        Iterable<UserRequest> requests = userRequestRepository.findAll();
+        model.addAttribute("inputData", new InputData("https://www.simbirsoft.com/",
+                "{' ', ',', '.', '!', '?','\"', ';', ':', '[', ']', '(', ')', '\\n', '\\r', '\\t'}\n"));
+        return "index";
     }
 }
 
@@ -116,11 +133,4 @@ class InputData {
         this.delimiters = delimiters;
     }
 
-    @Override
-    public String toString() {
-        return "InputData{" +
-                "url='" + url + '\'' +
-                ", delimiters='" + delimiters + '\'' +
-                '}';
-    }
 }
