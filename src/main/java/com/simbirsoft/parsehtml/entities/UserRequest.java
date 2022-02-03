@@ -23,7 +23,7 @@ public class UserRequest {
 
     private String delimiters;
 
-    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL)
     List<RequestResult> results = new LinkedList<>();
 
     public UserRequest(Date date, Time time, String url, String delimiters) {

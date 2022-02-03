@@ -1,13 +1,8 @@
 package com.simbirsoft.parsehtml.controllers;
 
-import com.simbirsoft.parsehtml.entities.RequestResult;
-import com.simbirsoft.parsehtml.entities.UserRequest;
-import com.simbirsoft.parsehtml.repositories.RequestResultRepository;
-import com.simbirsoft.parsehtml.repositories.UserRequestRepository;
-import com.simbirsoft.parsehtml.services.SplitText;
-import com.simbirsoft.parsehtml.services.WebPage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.simbirsoft.parsehtml.services.ParseHtmlService;
+import com.simbirsoft.parsehtml.services.exceptions.IncorrectDelimitersException;
+import com.simbirsoft.parsehtml.services.exceptions.UnreachableUrlException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,68 +13,40 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.view.RedirectView;
 
-import java.sql.Date;
-import java.sql.Time;
-import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/")
 public class ParseHtmlController {
 
     @Autowired
-    UserRequestRepository userRequestRepository;
+    ParseHtmlService parseHtmlService;
 
-    @Autowired
-    RequestResultRepository requestResultRepository;
-
-    Logger logger = LoggerFactory.getLogger(ParseHtmlController.class);
     @GetMapping("/index")
     public String providingInterface(Model model){
-        model.addAttribute("inputData", new InputData("https://www.simbirsoft.com/",
-                "{' ', ',', '.', '!', '?','\"', ';', ':', '[', ']', '(', ')', '\\n', '\\r', '\\t'}\n"));
+        model.addAttribute("inputData", new InputData());
         return "index";
     }
 
     @PostMapping("/index")
     public RedirectView parseHtml(@ModelAttribute(value = "inputData")InputData inputData,
                                   RedirectAttributes attributes){
-        String pageText = null;
         try {
-            pageText = WebPage.getWebPageText(inputData.getUrl());
-        } catch (Exception e) {
-            logger.error("Ошибка при загрузке странички по url '" + inputData.getUrl() + "'", e);
+            Map<String, Integer> words = parseHtmlService.parseHtml(inputData.getUrl(), inputData.getDelimiters());
+            attributes.addFlashAttribute("wordsMap", words);
+            return new RedirectView("/result-page");
+        } catch (UnreachableUrlException e){
             attributes.addFlashAttribute("errDescription",
                     "Не удалось получить доступ к сайту '" + inputData.getUrl() + "'");
             return new RedirectView("/user-error");
-        }
-        Map<String, Integer> wordsOnPage = null;
-        try {
-            wordsOnPage = SplitText.countWordsOnPage(pageText, inputData.getDelimiters());
-        } catch (IllegalArgumentException e){
-            logger.error("Ошибка при разделении странички на слова. Переданный список разделителей: "
-                    + inputData.getDelimiters(), e);
+        } catch (IncorrectDelimitersException e){
             attributes.addFlashAttribute("errDescription",
                     "Некорректный список разделителей " + inputData.getDelimiters());
             return new RedirectView("/user-error");
+        } catch (Exception e){
+            attributes.addFlashAttribute("errDescription", "Неизвестная ошибка");
+            return new RedirectView("/user-error");
         }
-        attributes.addFlashAttribute("wordsMap", wordsOnPage);
-
-        UserRequest userRequest = new UserRequest(
-                new Date(System.currentTimeMillis()),
-                new Time(System.currentTimeMillis()),
-                inputData.getUrl(),
-                inputData.getDelimiters());
-        userRequestRepository.save(userRequest);
-
-        userRequest.setResults(wordsOnPage.entrySet().stream()
-                .map(s -> new RequestResult(s.getKey(), s.getValue(), userRequest))
-                .collect(Collectors.toList()));
-        userRequestRepository.save(userRequest);
-
-        return new RedirectView("/result-page");
     }
 
     @GetMapping("/user-error")
@@ -96,13 +63,6 @@ public class ParseHtmlController {
         return "result_page";
     }
 
-    @GetMapping("/requests")
-    public String requestsHistory(Model model){
-        Iterable<UserRequest> requests = userRequestRepository.findAll();
-        model.addAttribute("inputData", new InputData("https://www.simbirsoft.com/",
-                "{' ', ',', '.', '!', '?','\"', ';', ':', '[', ']', '(', ')', '\\n', '\\r', '\\t'}\n"));
-        return "index";
-    }
 }
 
 class InputData {
@@ -110,6 +70,8 @@ class InputData {
     private String delimiters;
 
     public InputData() {
+        url = "";
+        delimiters = "";
     }
 
     public InputData(String url, String delimiters) {
