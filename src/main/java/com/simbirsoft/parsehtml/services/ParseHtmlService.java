@@ -44,7 +44,7 @@ public class ParseHtmlService {
             saveToRepository(url, delimiters, wordsOnPage);
         } catch (Exception e){
             logger.error("Ошибка при записи статистики в БД", e);
-            throw e;
+//            throw e;
         }
         return wordsOnPage;
     }
